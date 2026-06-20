@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pie Fection — Checklist de Fechamento</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;0,700;1,500&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --crust:      #1F1B16;
+    --crust-2:    #2A241D;
+    --crust-3:    #352D23;
+    --cream:      #F5EFE6;
+    --cream-dim:  #C9BFAF;
+    --glow:       #E8762C;
+    --glow-dim:   #B85A1E;
+    --butter:     #F2C94C;
+    --sage:       #7CA06A;
+    --line:       #463C2E;
+  }
+
+  *{ box-sizing: border-box; }
+  html, body{ margin:0; padding:0; }
+
+  body{
+    background: var(--crust);
+    background-image:
+      radial-gradient(ellipse 600px 400px at 50% -10%, rgba(232,118,44,0.10), transparent 60%);
+    color: var(--cream);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    padding: 32px 16px 64px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap{
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  .brand{
+    text-align: center;
+    margin-bottom: 22px;
+  }
+  .brand .eyebrow{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--glow);
+    margin-bottom: 6px;
+  }
+  .brand h1{
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-style: italic;
+    font-size: 38px;
+    margin: 0;
+    color: var(--cream);
+    letter-spacing: -0.01em;
+  }
+  .brand h1 span{ color: var(--glow); font-style: normal; }
+  .brand .sub{
+    font-size: 13px;
+    color: var(--cream-dim);
+    margin-top: 6px;
+  }
+
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom: 18px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--cream-dim);
+  }
+  .back-link{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    background:none;
+    border:none;
+    color: var(--cream);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor:pointer;
+    padding: 6px 0;
+  }
+  .back-link:hover{ color: var(--glow); }
+  .step-tag{ color: var(--glow); }
+
+  .chips{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-bottom: 18px;
+  }
+  .chip{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--crust);
+    background: var(--butter);
+    padding: 4px 10px;
+    border-radius: 99px;
+    font-weight: 600;
+  }
+
+  .ticket{
+    background: var(--crust-2);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 26px 22px 22px;
+    position: relative;
+    box-shadow: 0 20px 50px -20px rgba(0,0,0,0.6);
+  }
+  .ticket + .ticket{ margin-top: 18px; }
+
+  .section-label{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--glow);
+    margin: 0 0 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-label::after{
+    content:'';
+    flex:1;
+    height:1px;
+    background: var(--line);
+  }
+
+  .question{
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 600;
+    font-size: 19px;
+    color: var(--cream);
+    margin: 0 0 16px;
+  }
+
+  .cat-head{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .cat-head .cat-title{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size: 18px;
+    color: var(--cream);
+  }
+  .cat-head .cat-count{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--cream-dim);
+  }
+  .cat-head .cat-count.done{ color: var(--sage); }
+
+  .field-row{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .field{ margin-bottom: 14px; }
+  .field label{
+    display:block;
+    font-size: 12px;
+    color: var(--cream-dim);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  .field input[type="text"],
+  .field input[type="date"],
+  .field input[type="time"],
+  .field select,
+  .field textarea{
+    width: 100%;
+    background: var(--crust);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 11px 12px;
+    color: var(--cream);
+    font-family: 'Inter', sans-serif;
+    font-size: 14.5px;
+    outline: none;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .field select{
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M4 6L8 10L12 6' stroke='%23E8762C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 34px;
+    cursor: pointer;
+  }
+  .field select option{
+    background: var(--crust-2);
+    color: var(--cream);
+  }
+  .field input::placeholder{ color: #6E6353; }
+  .field input:focus,
+  .field textarea:focus{
+    border-color: var(--glow);
+    background: #211C16;
+  }
+  .field textarea{
+    resize: vertical;
+    min-height: 64px;
+    font-family: 'Inter', sans-serif;
+    line-height: 1.5;
+  }
+  .field input[type="date"]::-webkit-calendar-picker-indicator,
+  .field input[type="time"]::-webkit-calendar-picker-indicator{
+    filter: invert(0.8) sepia(1) saturate(3) hue-rotate(0deg);
+    cursor: pointer;
+  }
+
+  .field-static{
+    width: 100%;
+    background: var(--crust-3);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 11px 12px;
+    color: var(--cream-dim);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14.5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: default;
+    user-select: none;
+  }
+  .field-static .lock{
+    font-size: 12px;
+    opacity: 0.55;
+  }
+
+  .task{
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 13px 4px;
+    border-bottom: 1px dashed var(--line);
+    cursor: pointer;
+    user-select: none;
+  }
+  .task:last-child{ border-bottom: none; }
+
+  .box{
+    width: 24px;
+    height: 24px;
+    flex: 0 0 24px;
+    border-radius: 7px;
+    border: 1.5px solid var(--cream-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.18s ease;
+    background: transparent;
+  }
+  .box svg{
+    width: 14px; height: 14px;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 0.18s ease;
+  }
+  .task input{ display:none; }
+  .task input:checked + .box{
+    background: var(--sage);
+    border-color: var(--sage);
+  }
+  .task input:checked + .box svg{
+    opacity: 1;
+    transform: scale(1);
+  }
+  .task-label{
+    font-size: 14.5px;
+    font-weight: 500;
+    color: var(--cream);
+    transition: color 0.18s ease, opacity 0.18s ease;
+    line-height: 1.4;
+  }
+  .task input:checked ~ .task-label{
+    color: var(--cream-dim);
+    text-decoration: line-through;
+    text-decoration-color: var(--sage);
+    opacity: 0.8;
+  }
+
+  .cat-pick .task-label{ font-size: 16px; font-weight: 600; }
+
+  .progress-line{
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    margin-top: 4px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--cream-dim);
+  }
+  .progress-bar{
+    flex:1;
+    height: 5px;
+    background: var(--crust);
+    border-radius: 99px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+  }
+  .progress-fill{
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--glow-dim), var(--glow));
+    transition: width 0.3s ease;
+  }
+  .progress-card{
+    background: var(--crust-2);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-top: 18px;
+  }
+  .progress-card .progress-title{
+    font-size: 12px;
+    color: var(--cream-dim);
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+
+  .btn{
+    width: 100%;
+    padding: 15px;
+    border-radius: 12px;
+    border: none;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    transition: transform 0.12s ease, filter 0.12s ease;
+  }
+  .btn:active{ transform: scale(0.98); }
+  .btn-primary{
+    background: var(--glow);
+    color: #1A1410;
+    margin-top: 6px;
+  }
+  .btn-primary:hover{ filter: brightness(1.08); }
+  .btn-row{
+    display:flex;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .btn-secondary{
+    background: transparent;
+    border: 1.5px solid var(--line);
+    color: var(--cream);
+    flex: 1;
+  }
+  .btn-secondary:hover{ border-color: var(--glow); color: var(--glow); }
+  .btn-whatsapp{
+    background: #25D366;
+    color: #0B2014;
+    flex: 1;
+  }
+  .btn-whatsapp:hover{ filter: brightness(1.06); }
+
+  .hint{
+    font-size: 12px;
+    color: #A0937C;
+    margin-top: 10px;
+    text-align: center;
+  }
+  .hint.warn{ color: var(--glow); }
+
+  #summaryWrap{
+    display: none;
+    margin-top: 18px;
+  }
+  .receipt{
+    background: var(--cream);
+    color: #2A241D;
+    border-radius: 4px;
+    padding: 22px 20px 24px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    position: relative;
+  }
+  .receipt::before, .receipt::after{
+    content:'';
+    position:absolute;
+    left:0; right:0;
+    height: 10px;
+    background:
+      radial-gradient(circle at 8px 5px, var(--crust) 5px, transparent 5.5px) repeat-x;
+    background-size: 16px 10px;
+  }
+  .receipt::before{ top: -1px; }
+  .receipt::after{ bottom: -1px; transform: rotate(180deg); }
+
+  #copiedTag{
+    display:none;
+    text-align:center;
+    font-size: 12px;
+    color: var(--sage);
+    margin-top: 8px;
+    font-weight: 600;
+  }
+
+  footer{
+    text-align:center;
+    margin-top: 28px;
+    font-size: 11px;
+    color: #5C5142;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .screen{ display:none; }
+  .screen.active{ display:block; animation: slidein 0.3s ease; }
+  @keyframes slidein{
+    from{ opacity:0; transform: translateY(10px); }
+    to{ opacity:1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="brand">
+    <div class="eyebrow">Checklist de Fechamento</div>
+    <h1>Pie <span>Fection</span></h1>
+    <div class="sub">Confira tudo antes de fechar a loja 🥧</div>
+  </div>
+
+  <div class="screen active" id="screen1">
+
+    <div class="topbar">
+      <span>Pie Fection</span>
+      <span class="step-tag">Etapa 1 de 2</span>
+    </div>
+
+    <div class="ticket">
+      <p class="section-label">Dados</p>
+      <div class="field">
+        <label for="nome">Nome do funcionário</label>
+        <select id="nome">
+          <option value="" disabled selected>Selecione seu nome</option>
+          <option value="Aelson">Aelson</option>
+          <option value="Alissa">Alissa</option>
+          <option value="Douglas">Douglas</option>
+          <option value="Duda">Duda</option>
+          <option value="Emily">Emily</option>
+          <option value="Filipe">Filipe</option>
+          <option value="Gaby">Gaby</option>
+          <option value="Letícia">Letícia</option>
+          <option value="Pedro">Pedro</option>
+          <option value="Sara">Sara</option>
+          <option value="Yasmyn">Yasmyn</option>
+          <option value="outro">Outro</option>
+        </select>
+      </div>
+      <div class="field" id="nomeOutroWrap" style="display:none;">
+        <label for="nomeOutro">Digite o nome</label>
+        <input type="text" id="nomeOutro" placeholder="Nome do funcionário">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Data</label>
+          <div class="field-static"><span id="dataDisplay">—</span><span class="lock">🔒</span></div>
+        </div>
+        <div class="field">
+          <label>Horário</label>
+          <div class="field-static"><span id="horaDisplay">—</span><span class="lock">🔒</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ticket">
+      <p class="section-label">Fechamento</p>
+      <p class="question">Qual é o seu fechamento de hoje?</p>
+      <div id="categoryPicker"></div>
+    </div>
+
+    <button class="btn btn-primary" id="continueBtn">Continuar →</button>
+    <p class="hint" id="hintText1">Selecione ao menos um fechamento para continuar</p>
+  </div>
+
+  <div class="screen" id="screen2">
+
+    <div class="topbar">
+      <button class="back-link" id="backBtn">← Voltar</button>
+      <span class="step-tag">Etapa 2 de 2</span>
+    </div>
+
+    <div class="chips" id="chips"></div>
+
+    <div id="categoryTasks"></div>
+
+    <div class="progress-card">
+      <div class="progress-title">Progresso geral</div>
+      <div class="progress-line">
+        <span id="progressText">0 / 0</span>
+        <span class="progress-bar"><span class="progress-fill" id="progressFill"></span></span>
+      </div>
+    </div>
+
+    <div class="ticket">
+      <p class="section-label">Observações</p>
+      <div class="field" style="margin-bottom:0;">
+        <textarea id="obs" placeholder="Algo que o gerente precisa saber? (opcional)"></textarea>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="generateBtn">Gerar resumo</button>
+    <p class="hint" id="hintText2">Marque os itens e gere o resumo para o gerente</p>
+
+    <div id="summaryWrap">
+      <div class="receipt" id="receiptText"></div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" id="copyBtn">Copiar texto</button>
+        <button class="btn btn-whatsapp" id="waBtn">Enviar no WhatsApp</button>
+      </div>
+      <p id="copiedTag">Copiado ✓</p>
+    </div>
+  </div>
+
+  <footer>PIE FECTION · FECHAMENTO DIÁRIO</footer>
+</div>
+
+<script>
+  const CHECK_SVG = '<svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.2 11.5L13 4.5" stroke="#1F1B16" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  const CATEGORIES = [
+    { key:'varrer', label:'Varrer', emoji:'🧹', tasks:[
+        'Varrer palco do músico',
+        'Varrer salão afastando mesas e cadeiras',
+        'Varrer corredor dos banheiros',
+        'Varrer os banheiros',
+        'Varrer a área da estação',
+        'Limpar a pá após o uso'
+    ]},
+    { key:'mopar', label:'Mopar', emoji:'🪣', tasks:[
+        'Encher o máximo do balde com o produto número 30 no painel (produto para chão)',
+        'Adicionar Fabuloso',
+        'Passar mop o mais seco possível, o chão não pode ficar molhado',
+        'Passar em TODO o piso, cantos, quinas e abaixo das mesas e cadeiras',
+        'Reorganizar cadeiras e mesas',
+        'Lavar o balde',
+        'Descartar o mop junto com os panos'
+    ]},
+    { key:'estacao', label:'Estação', emoji:'☕', tasks:[
+        'Repor sachês (6 de cada)',
+        'Limpar e organizar a estação do Office',
+        'Limpar os bicos dos condimentos',
+        'Cobrir queijo do crema com plástico filme e guardar o carrinho na geladeira',
+        'Embalar condimentos no plástico filme',
+        'Colocar as bandejas para lavar e repor na estação',
+        'Checar e repor açúcar e adoçante',
+        'Despejar panos usados no balde azul da Cintas',
+        'Limpar armário da estação',
+        'Guardar copos de boca para baixo',
+        'Polir talheres e guardar nas gavetas correspondentes',
+        'Organizar armário da estação',
+        'Embrulhar no plástico filme e guardar queijo Raclette',
+        'Limpar racleteira'
+    ]},
+    { key:'banheiro', label:'Banheiro', emoji:'🚻', tasks:[
+        'Limpar vidros e espelhos',
+        'Limpar espelho do corredor',
+        'Limpar paredes e tirar manchas',
+        'Escovar sanitário e aplicar produto tira odor',
+        'Limpar pias',
+        'Repor todos os papéis',
+        'Recolher lixos do chão e saco de lixo das lixeiras',
+        'Limpar os trocadores de bebês dentro das cabines',
+        'Tirar itens e limpar o carrinho do banheiro feminino',
+        'Limpar lustres',
+        'Organizar as caixas de supply no office',
+        'Tirar lixos dos banheiros e cozinha e descartar no dumpster'
+    ]}
+  ];
+
+  const selectedCategories = new Set();
+  const subtaskState = {};
+  CATEGORIES.forEach(c => subtaskState[c.key] = new Array(c.tasks.length).fill(false));
+
+  function pad(n){ return String(n).padStart(2, '0'); }
+
+  function tickClock(){
+    const now = new Date();
+    document.getElementById('dataDisplay').textContent =
+      pad(now.getDate()) + '/' + pad(now.getMonth()+1) + '/' + now.getFullYear();
+    document.getElementById('horaDisplay').textContent =
+      pad(now.getHours()) + ':' + pad(now.getMinutes());
+  }
+  tickClock();
+  setInterval(tickClock, 15000);
+
+  const categoryPicker = document.getElementById('categoryPicker');
+  CATEGORIES.forEach(cat => {
+    const label = document.createElement('label');
+    label.className = 'task cat-pick';
+    label.innerHTML = `
+      <input type="checkbox" class="cat-check" data-key="${cat.key}">
+      <span class="box">${CHECK_SVG}</span>
+      <span class="task-label">${cat.emoji} ${cat.label}</span>
+    `;
+    categoryPicker.appendChild(label);
+  });
+
+  document.querySelectorAll('.cat-check').forEach(input => {
+    input.addEventListener('change', () => {
+      if(input.checked) selectedCategories.add(input.dataset.key);
+      else selectedCategories.delete(input.dataset.key);
+    });
+  });
+
+  const nomeSelect = document.getElementById('nome');
+  const nomeOutroWrap = document.getElementById('nomeOutroWrap');
+  const nomeOutroInput = document.getElementById('nomeOutro');
+
+  nomeSelect.addEventListener('change', () => {
+    if(nomeSelect.value === 'outro'){
+      nomeOutroWrap.style.display = 'block';
+      nomeOutroInput.focus();
+    }else{
+      nomeOutroWrap.style.display = 'none';
+      nomeOutroInput.value = '';
+    }
+  });
+
+  function getNomeSelecionado(){
+    if(nomeSelect.value === 'outro') return nomeOutroInput.value.trim();
+    return nomeSelect.value.trim();
+  }
+
+  const screen1 = document.getElementById('screen1');
+  const screen2 = document.getElementById('screen2');
+  const hintText1 = document.getElementById('hintText1');
+
+  document.getElementById('continueBtn').addEventListener('click', () => {
+    const nome = getNomeSelecionado();
+    if(!nome){
+      hintText1.textContent = nomeSelect.value === 'outro'
+        ? 'Digite seu nome antes de continuar'
+        : 'Selecione seu nome antes de continuar';
+      hintText1.classList.add('warn');
+      (nomeSelect.value === 'outro' ? nomeOutroInput : nomeSelect).focus();
+      return;
+    }
+    if(selectedCategories.size === 0){
+      hintText1.textContent = 'Selecione ao menos um fechamento para continuar';
+      hintText1.classList.add('warn');
+      return;
+    }
+    hintText1.classList.remove('warn');
+    renderScreen2();
+    screen1.classList.remove('active');
+    screen2.classList.add('active');
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  document.getElementById('backBtn').addEventListener('click', () => {
+    screen2.classList.remove('active');
+    screen1.classList.add('active');
+    document.getElementById('summaryWrap').style.display = 'none';
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  const categoryTasks = document.getElementById('categoryTasks');
+  const chipsWrap = document.getElementById('chips');
+
+  function renderScreen2(){
+    categoryTasks.innerHTML = '';
+    chipsWrap.innerHTML = '';
+
+    CATEGORIES.forEach(cat => {
+      if(!selectedCategories.has(cat.key)) return;
+
+      const chip = document.createElement('span');
+      chip.className = 'chip';
+      chip.textContent = cat.emoji + ' ' + cat.label;
+      chipsWrap.appendChild(chip);
+
+      const ticket = document.createElement('div');
+      ticket.className = 'ticket';
+
+      const head = document.createElement('div');
+      head.className = 'cat-head';
+      head.innerHTML = `
+        <span class="cat-title">${cat.emoji} ${cat.label}</span>
+        <span class="cat-count" id="count-${cat.key}">0/${cat.tasks.length}</span>
+      `;
+      ticket.appendChild(head);
+
+      cat.tasks.forEach((taskLabel, idx) => {
+        const label = document.createElement('label');
+        label.className = 'task';
+        const checked = subtaskState[cat.key][idx];
+        label.innerHTML = `
+          <input type="checkbox" class="sub-check" data-cat="${cat.key}" data-idx="${idx}" ${checked ? 'checked' : ''}>
+          <span class="box">${CHECK_SVG}</span>
+          <span class="task-label">${taskLabel}</span>
+        `;
+        ticket.appendChild(label);
+      });
+
+      categoryTasks.appendChild(ticket);
+    });
+
+    document.querySelectorAll('.sub-check').forEach(input => {
+      input.addEventListener('change', () => {
+        subtaskState[input.dataset.cat][input.dataset.idx] = input.checked;
+        updateProgress2();
+      });
+    });
+
+    updateProgress2();
+    document.getElementById('summaryWrap').style.display = 'none';
+  }
+
+  function updateProgress2(){
+    let total = 0, done = 0;
+    CATEGORIES.forEach(cat => {
+      if(!selectedCategories.has(cat.key)) return;
+      const arr = subtaskState[cat.key];
+      const catDone = arr.filter(Boolean).length;
+      total += arr.length;
+      done += catDone;
+      const countEl = document.getElementById('count-' + cat.key);
+      if(countEl){
+        countEl.textContent = catDone + '/' + arr.length;
+        countEl.classList.toggle('done', catDone === arr.length);
+      }
+    });
+    document.getElementById('progressText').textContent = done + ' / ' + total;
+    document.getElementById('progressFill').style.width = (total ? (done/total*100) : 0) + '%';
+  }
+
+  function buildSummary(){
+    const nome = getNomeSelecionado();
+    const data = document.getElementById('dataDisplay').textContent;
+    const hora = document.getElementById('horaDisplay').textContent;
+    const obs = document.getElementById('obs').value.trim();
+
+    let total = 0, done = 0;
+    const selected = CATEGORIES.filter(c => selectedCategories.has(c.key));
+    selected.forEach(cat => {
+      total += subtaskState[cat.key].length;
+      done += subtaskState[cat.key].filter(Boolean).length;
+    });
+    const allDone = total > 0 && done === total;
+
+    let lines = [];
+    lines.push((allDone ? '✅' : '⚠️') + ' FECHAMENTO — PIE FECTION');
+    lines.push('📅 ' + data + '   ⏰ ' + hora);
+    lines.push('👤 ' + (nome || '—'));
+    lines.push('');
+    lines.push('Fechamento: ' + selected.map(c => c.label).join(', '));
+
+    selected.forEach(cat => {
+      const arr = subtaskState[cat.key];
+      const catDone = arr.filter(Boolean).length;
+      lines.push('');
+      lines.push(cat.emoji + ' ' + cat.label.toUpperCase() + ' (' + catDone + '/' + arr.length + ')');
+      cat.tasks.forEach((t, idx) => {
+        lines.push((arr[idx] ? '✅' : '⬜') + ' ' + t);
+      });
+    });
+
+    lines.push('');
+    lines.push('📝 Observações: ' + (obs || 'Nenhuma'));
+
+    if(!allDone){
+      lines.push('');
+      lines.push('⚠️ Atenção: nem todos os itens foram concluídos.');
+    }
+
+    return lines.join('\n');
+  }
+
+  const hintText2 = document.getElementById('hintText2');
+  const summaryWrap = document.getElementById('summaryWrap');
+  const receiptText = document.getElementById('receiptText');
+
+  document.getElementById('generateBtn').addEventListener('click', () => {
+    hintText2.classList.remove('warn');
+    hintText2.textContent = 'Resumo pronto — copie ou envie direto no WhatsApp';
+    receiptText.textContent = buildSummary();
+    summaryWrap.style.display = 'block';
+    summaryWrap.scrollIntoView({behavior:'smooth', block:'nearest'});
+  });
+
+  document.getElementById('copyBtn').addEventListener('click', async () => {
+    const text = receiptText.textContent;
+    try{
+      await navigator.clipboard.writeText(text);
+    }catch(e){
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    const tag = document.getElementById('copiedTag');
+    tag.style.display = 'block';
+    setTimeout(() => tag.style.display = 'none', 1800);
+  });
+
+  document.getElementById('waBtn').addEventListener('click', () => {
+    const text = encodeURIComponent(receiptText.textContent);
+    window.open('https://api.whatsapp.com/send?text=' + text, '_blank');
+  });
+</script>
+
+</body>
+</html>
