@@ -6,6 +6,7 @@
 <title>Pie Fection — Checklist de Fechamento</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;0,700;1,500&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
   :root{
     --crust:      #1F1B16;
@@ -674,11 +675,11 @@
 
     <div id="summaryWrap">
       <div class="receipt" id="receiptText"></div>
-      <button class="btn btn-whatsapp" id="shareWithPhotosBtn" style="display:none; margin-top:14px;">📷 Enviar no WhatsApp (com fotos)</button>
-      <div class="btn-row">
-        <button class="btn btn-secondary" id="copyBtn">Copiar texto</button>
-        <button class="btn btn-secondary" id="waBtn">Enviar só texto</button>
-      </div>
+      <button class="btn btn-whatsapp" id="shareWithPhotosBtn" style="display:none; margin-top:14px;">
+        <span id="shareWithPhotosLabel">Compartilhar com fotos 📷</span>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="#0B2014" style="vertical-align:-3px; margin-left:6px;"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.85.5 3.58 1.42 5.09L2 22l5.25-1.38a9.87 9.87 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2zm5.78 14.1c-.24.68-1.42 1.32-1.95 1.4-.5.08-1.13.11-1.83-.12-.42-.13-.96-.31-1.65-.61-2.91-1.26-4.81-4.2-4.96-4.39-.14-.2-1.18-1.57-1.18-3 0-1.42.75-2.12 1.01-2.41.27-.29.58-.36.77-.36.2 0 .39 0 .56.01.18.01.42-.07.65.5.24.59.81 2.03.88 2.18.07.15.12.33.02.53-.09.2-.14.32-.28.49-.14.17-.3.38-.42.51-.14.15-.29.31-.13.6.17.29.75 1.24 1.61 2.01 1.11.99 2.04 1.3 2.33 1.45.29.15.46.13.63-.08.18-.2.74-.86.93-1.16.2-.29.39-.24.65-.14.27.1 1.7.8 1.99.95.29.15.49.22.56.34.07.13.07.74-.17 1.41z"/></svg>
+      </button>
+      <button class="btn btn-secondary" id="copyBtn" style="margin-top:10px;">Copiar texto</button>
       <p id="copiedTag">Copiado ✓</p>
     </div>
   </div>
@@ -1211,8 +1212,7 @@
 
   function updateShareButtonVisibility(){
     const allPhotos = getAllTaskPhotos();
-    const canShareFiles = !!(navigator.canShare && allPhotos.length > 0 && navigator.canShare({ files: allPhotos }));
-    shareWithPhotosBtn.style.display = canShareFiles ? 'block' : 'none';
+    shareWithPhotosBtn.style.display = (allPhotos.length > 0 && !!navigator.share) ? 'block' : 'none';
   }
 
   document.getElementById('generateBtn').addEventListener('click', () => {
@@ -1225,7 +1225,7 @@
       return;
     }
     hintText2.classList.remove('warn');
-    hintText2.textContent = 'Resumo pronto — copie ou envie direto no WhatsApp';
+    hintText2.textContent = 'Resumo pronto — compartilhe direto no WhatsApp';
     receiptText.textContent = buildSummary();
     summaryWrap.style.display = 'block';
     updateShareButtonVisibility();
@@ -1249,12 +1249,50 @@
     setTimeout(() => tag.style.display = 'none', 1800);
   });
 
-  document.getElementById('waBtn').addEventListener('click', () => {
-    const text = encodeURIComponent(receiptText.textContent);
-    window.open('https://api.whatsapp.com/send?text=' + text, '_blank');
-  });
+  async function buildPhotosZipFile(){
+    const zip = new JSZip();
+    let i = 1;
+    Object.values(taskPhotos).forEach(files => {
+      files.forEach(file => {
+        const ext = (file.name && file.name.includes('.')) ? file.name.split('.').pop() : 'jpg';
+        zip.file('foto-' + String(i).padStart(2, '0') + '.' + ext, file);
+        i++;
+      });
+    });
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const shiftLabel = selectedShift === 'abertura' ? 'abertura' : 'fechamento';
+    const dataSafe = (document.getElementById('dataDisplay').textContent || '').replace(/\//g, '-');
+    return new File([blob], 'fotos-' + shiftLabel + '-' + dataSafe + '.zip', { type: 'application/zip' });
+  }
 
   shareWithPhotosBtn.addEventListener('click', async () => {
+    const shareWithPhotosLabel = document.getElementById('shareWithPhotosLabel');
+    const originalLabel = shareWithPhotosLabel.textContent;
+    shareWithPhotosLabel.textContent = 'Preparando arquivo...';
+    shareWithPhotosBtn.disabled = true;
+
+    try{
+      const zipFile = await buildPhotosZipFile();
+      if(navigator.canShare && navigator.canShare({ files: [zipFile] })){
+        await navigator.share({
+          title: 'Pie Fection',
+          text: receiptText.textContent,
+          files: [zipFile]
+        });
+        return;
+      }
+    }catch(e){
+      if(e.name === 'AbortError'){
+        shareWithPhotosLabel.textContent = originalLabel;
+        shareWithPhotosBtn.disabled = false;
+        return;
+      }
+      // zip sharing unsupported or failed — fall back below
+    } finally {
+      shareWithPhotosLabel.textContent = originalLabel;
+      shareWithPhotosBtn.disabled = false;
+    }
+
     try{
       await navigator.share({
         title: 'Pie Fection',
