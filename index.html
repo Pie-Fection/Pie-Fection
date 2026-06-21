@@ -208,6 +208,43 @@
     grid-template-columns: 1fr 1fr;
     gap: 12px;
   }
+
+  .colaborador-row{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .colaborador-row input{
+    flex: 1;
+    background: var(--crust);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 12px;
+    color: var(--cream);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    outline: none;
+  }
+  .colaborador-row input:focus{ border-color: var(--glow); }
+  .square-btn{
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    border-radius: 9px;
+    border: 1.5px solid var(--line);
+    background: var(--crust-2);
+    color: var(--cream-dim);
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .square-btn:hover{ border-color: var(--glow); color: var(--glow); }
+
   .field{ margin-bottom: 14px; }
   .field label{
     display:block;
@@ -411,6 +448,58 @@
   }
   .btn-whatsapp:hover{ filter: brightness(1.06); }
 
+  .photo-add-btn{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px;
+    border-radius: 12px;
+    border: 1.5px dashed var(--line);
+    color: var(--cream-dim);
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 14.5px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .photo-add-btn:hover{ border-color: var(--glow); color: var(--cream); }
+  .photo-grid{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .photo-grid:empty{ margin-top: 0; }
+  .photo-thumb{
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+  }
+  .photo-thumb img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .photo-thumb .remove-photo{
+    position: absolute;
+    top: 4px; right: 4px;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.65);
+    color: #fff;
+    border: none;
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   .hint{
     font-size: 12px;
     color: #A0937C;
@@ -494,6 +583,17 @@
         <label for="nome">Nome do funcionário</label>
         <input type="text" id="nome" placeholder="Digite seu nome" required>
       </div>
+
+      <label class="task" style="padding:10px 4px; margin-bottom:6px;">
+        <input type="checkbox" id="dividindoTarefa">
+        <span class="box"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.2 11.5L13 4.5" stroke="#1F1B16" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span class="task-label">Está dividindo a tarefa?</span>
+      </label>
+
+      <div id="colaboradoresWrap" style="display:none; margin-bottom:14px;">
+        <div id="colaboradoresList"></div>
+      </div>
+
       <div class="field-row">
         <div class="field">
           <label>Data</label>
@@ -551,6 +651,14 @@
       </div>
     </div>
 
+    <div class="ticket">
+      <p class="section-label">Fotos</p>
+      <p class="question">Tire pelo menos 3 fotos para validação</p>
+      <label class="photo-add-btn" for="photoInput">📷 Tirar foto <span id="photoCount">(0/3)</span></label>
+      <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none;">
+      <div class="photo-grid" id="photoGrid"></div>
+    </div>
+
     <button class="btn btn-primary" id="generateBtn">Gerar resumo</button>
     <p class="hint" id="hintText2">Marque os itens e gere o resumo para o gerente</p>
 
@@ -560,6 +668,7 @@
         <button class="btn btn-secondary" id="copyBtn">Copiar texto</button>
         <button class="btn btn-whatsapp" id="waBtn">Enviar no WhatsApp</button>
       </div>
+      <button class="btn btn-primary" id="shareWithPhotosBtn" style="display:none; margin-top:10px;">📷 Compartilhar com fotos</button>
       <p id="copiedTag">Copiado ✓</p>
     </div>
   </div>
@@ -696,6 +805,63 @@
 
   function getNomeSelecionado(){
     return nomeInput.value.trim();
+  }
+
+  let colaboradores = [];
+  const dividindoCheckbox = document.getElementById('dividindoTarefa');
+  const colaboradoresWrap = document.getElementById('colaboradoresWrap');
+  const colaboradoresList = document.getElementById('colaboradoresList');
+
+  dividindoCheckbox.addEventListener('change', () => {
+    colaboradoresWrap.style.display = dividindoCheckbox.checked ? 'block' : 'none';
+    if(dividindoCheckbox.checked && colaboradores.length === 0){
+      colaboradores = [''];
+      renderColaboradores();
+    }
+  });
+
+  function renderColaboradores(){
+    colaboradoresList.innerHTML = '';
+    colaboradores.forEach((val, idx) => {
+      const row = document.createElement('div');
+      row.className = 'colaborador-row';
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.placeholder = 'Nome da pessoa';
+      input.value = val;
+      input.addEventListener('input', () => { colaboradores[idx] = input.value; });
+      row.appendChild(input);
+
+      const addBtn = document.createElement('button');
+      addBtn.type = 'button';
+      addBtn.className = 'square-btn';
+      addBtn.textContent = '+';
+      addBtn.addEventListener('click', () => {
+        colaboradores.splice(idx + 1, 0, '');
+        renderColaboradores();
+      });
+      row.appendChild(addBtn);
+
+      if(colaboradores.length > 1){
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'square-btn';
+        removeBtn.textContent = '−';
+        removeBtn.addEventListener('click', () => {
+          colaboradores.splice(idx, 1);
+          renderColaboradores();
+        });
+        row.appendChild(removeBtn);
+      }
+
+      colaboradoresList.appendChild(row);
+    });
+  }
+
+  function getColaboradoresNomes(){
+    if(!dividindoCheckbox.checked) return [];
+    return colaboradores.map(c => c.trim()).filter(Boolean);
   }
 
   const screen1 = document.getElementById('screen1');
@@ -890,6 +1056,9 @@
       lines.push((allDone ? '✅' : '⚠️') + ' ABERTURA — PIE FECTION');
       lines.push('📅 ' + data + '   ⏰ ' + hora);
       lines.push('👤 ' + (nome || '—'));
+      if(getColaboradoresNomes().length){
+        lines.push('👥 Dividido com: ' + getColaboradoresNomes().join(', '));
+      }
       lines.push('');
       lines.push('☀️ ABERTURA (' + done + '/' + total + ')');
       visibleIdx.forEach(idx => {
@@ -915,6 +1084,9 @@
     lines.push((allDone ? '✅' : '⚠️') + ' FECHAMENTO — PIE FECTION');
     lines.push('📅 ' + data + '   ⏰ ' + hora);
     lines.push('👤 ' + (nome || '—'));
+    if(getColaboradoresNomes().length){
+      lines.push('👥 Dividido com: ' + getColaboradoresNomes().join(', '));
+    }
     lines.push('');
     lines.push('Fechamento: ' + selected.map(c => c.label).join(', '));
 
@@ -944,11 +1116,63 @@
   const summaryWrap = document.getElementById('summaryWrap');
   const receiptText = document.getElementById('receiptText');
 
+  let photos = [];
+  const MIN_PHOTOS = 3;
+  const photoInput = document.getElementById('photoInput');
+  const photoGrid = document.getElementById('photoGrid');
+  const photoCount = document.getElementById('photoCount');
+  const shareWithPhotosBtn = document.getElementById('shareWithPhotosBtn');
+
+  photoInput.addEventListener('change', () => {
+    Array.from(photoInput.files).forEach(file => photos.push(file));
+    photoInput.value = '';
+    renderPhotoGrid();
+    updateShareButtonVisibility();
+  });
+
+  function renderPhotoGrid(){
+    photoGrid.innerHTML = '';
+    photos.forEach((file, idx) => {
+      const thumb = document.createElement('div');
+      thumb.className = 'photo-thumb';
+
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(file);
+      thumb.appendChild(img);
+
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'remove-photo';
+      removeBtn.textContent = '✕';
+      removeBtn.addEventListener('click', () => {
+        photos.splice(idx, 1);
+        renderPhotoGrid();
+        updateShareButtonVisibility();
+      });
+      thumb.appendChild(removeBtn);
+
+      photoGrid.appendChild(thumb);
+    });
+    photoCount.textContent = '(' + photos.length + '/' + MIN_PHOTOS + ')';
+    photoCount.style.color = photos.length >= MIN_PHOTOS ? 'var(--sage)' : '';
+  }
+
+  function updateShareButtonVisibility(){
+    const canShareFiles = !!(navigator.canShare && photos.length > 0 && navigator.canShare({ files: photos }));
+    shareWithPhotosBtn.style.display = canShareFiles ? 'block' : 'none';
+  }
+
   document.getElementById('generateBtn').addEventListener('click', () => {
+    if(photos.length < MIN_PHOTOS){
+      hintText2.classList.add('warn');
+      hintText2.textContent = 'Tire pelo menos ' + MIN_PHOTOS + ' fotos antes de gerar o resumo';
+      document.getElementById('photoInput').closest('.ticket').scrollIntoView({behavior:'smooth', block:'center'});
+      return;
+    }
     hintText2.classList.remove('warn');
     hintText2.textContent = 'Resumo pronto — copie ou envie direto no WhatsApp';
     receiptText.textContent = buildSummary();
     summaryWrap.style.display = 'block';
+    updateShareButtonVisibility();
     summaryWrap.scrollIntoView({behavior:'smooth', block:'nearest'});
   });
 
@@ -972,6 +1196,18 @@
   document.getElementById('waBtn').addEventListener('click', () => {
     const text = encodeURIComponent(receiptText.textContent);
     window.open('https://api.whatsapp.com/send?text=' + text, '_blank');
+  });
+
+  shareWithPhotosBtn.addEventListener('click', async () => {
+    try{
+      await navigator.share({
+        title: 'Pie Fection',
+        text: receiptText.textContent,
+        files: photos
+      });
+    }catch(e){
+      if(e.name !== 'AbortError') console.error(e);
+    }
   });
 </script>
 
