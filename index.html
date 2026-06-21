@@ -329,7 +329,25 @@
     cursor: pointer;
     user-select: none;
   }
-  .task:last-child{ border-bottom: none; }
+  .task-item:last-child .task{ border-bottom: none; }
+  .task-item:has(.task-photo-block[style*="block"]) .task{ border-bottom: none; }
+
+  .task-photo-block{
+    padding: 4px 4px 16px 41px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .task-item:last-child .task-photo-block{ border-bottom: none; }
+  .photo-hint{
+    font-size: 12.5px;
+    color: var(--cream-dim);
+    margin: 0 0 10px;
+  }
+  .photo-add-btn.small{
+    display: inline-flex;
+    width: auto;
+    padding: 9px 16px;
+    font-size: 13px;
+  }
 
   .box{
     width: 24px;
@@ -651,14 +669,6 @@
       </div>
     </div>
 
-    <div class="ticket">
-      <p class="section-label">Fotos</p>
-      <p class="question">Tire pelo menos 3 fotos para validação</p>
-      <label class="photo-add-btn" for="photoInput">📷 Tirar foto <span id="photoCount">(0/3)</span></label>
-      <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none;">
-      <div class="photo-grid" id="photoGrid"></div>
-    </div>
-
     <button class="btn btn-primary" id="generateBtn">Gerar resumo</button>
     <p class="hint" id="hintText2">Marque os itens e gere o resumo para o gerente</p>
 
@@ -916,6 +926,61 @@
 
   const categoryTasks = document.getElementById('categoryTasks');
   const chipsWrap = document.getElementById('chips');
+  let taskPhotos = {};
+
+  function taskRowHTML(checkboxClass, dataAttrsStr, taskLabel, checked, photoKey){
+    return `
+      <label class="task">
+        <input type="checkbox" class="${checkboxClass}" ${dataAttrsStr} data-photokey="${photoKey}" ${checked ? 'checked' : ''}>
+        <span class="box">${CHECK_SVG}</span>
+        <span class="task-label">${taskLabel}</span>
+      </label>
+      <div class="task-photo-block" id="photoblock-${photoKey}" style="display:${checked ? 'block' : 'none'};">
+        <p class="photo-hint">Faça upload de no mínimo uma foto para validação</p>
+        <label class="photo-add-btn small" for="photoInput-${photoKey}">📷 Tirar foto</label>
+        <input type="file" class="task-photo-input" data-key="${photoKey}" id="photoInput-${photoKey}" accept="image/*" capture="environment" style="display:none;">
+        <div class="photo-grid" id="photoGrid-${photoKey}"></div>
+      </div>
+    `;
+  }
+
+  function renderTaskPhotoGrid(key){
+    const grid = document.getElementById('photoGrid-' + key);
+    if(!grid) return;
+    grid.innerHTML = '';
+    (taskPhotos[key] || []).forEach((file, idx) => {
+      const thumb = document.createElement('div');
+      thumb.className = 'photo-thumb';
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(file);
+      thumb.appendChild(img);
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'remove-photo';
+      removeBtn.textContent = '✕';
+      removeBtn.addEventListener('click', () => {
+        taskPhotos[key].splice(idx, 1);
+        renderTaskPhotoGrid(key);
+      });
+      thumb.appendChild(removeBtn);
+      grid.appendChild(thumb);
+    });
+  }
+
+  function wireTaskPhotoInputs(){
+    document.querySelectorAll('.task-photo-input').forEach(input => {
+      input.addEventListener('change', () => {
+        const key = input.dataset.key;
+        if(!taskPhotos[key]) taskPhotos[key] = [];
+        Array.from(input.files).forEach(file => taskPhotos[key].push(file));
+        input.value = '';
+        renderTaskPhotoGrid(key);
+      });
+    });
+  }
+
+  function getAllTaskPhotos(){
+    return Object.values(taskPhotos).flat();
+  }
 
   function renderScreen2(){
     categoryTasks.innerHTML = '';
@@ -942,15 +1007,12 @@
 
       visibleIdx.forEach(idx => {
         const taskLabel = ABERTURA_TASKS[idx].label;
-        const label = document.createElement('label');
-        label.className = 'task';
         const checked = aberturaState[idx];
-        label.innerHTML = `
-          <input type="checkbox" class="sub-check-abertura" data-idx="${idx}" ${checked ? 'checked' : ''}>
-          <span class="box">${CHECK_SVG}</span>
-          <span class="task-label">${taskLabel}</span>
-        `;
-        ticket.appendChild(label);
+        const photoKey = 'a-' + idx;
+        const wrapper = document.createElement('div');
+        wrapper.className = 'task-item';
+        wrapper.innerHTML = taskRowHTML('sub-check-abertura', `data-idx="${idx}"`, taskLabel, checked, photoKey);
+        ticket.appendChild(wrapper);
       });
 
       categoryTasks.appendChild(ticket);
@@ -958,6 +1020,8 @@
       document.querySelectorAll('.sub-check-abertura').forEach(input => {
         input.addEventListener('change', () => {
           aberturaState[input.dataset.idx] = input.checked;
+          const block = document.getElementById('photoblock-' + input.dataset.photokey);
+          if(block) block.style.display = input.checked ? 'block' : 'none';
           updateProgress2();
         });
       });
@@ -982,15 +1046,12 @@
         ticket.appendChild(head);
 
         cat.tasks.forEach((taskLabel, idx) => {
-          const label = document.createElement('label');
-          label.className = 'task';
           const checked = subtaskState[cat.key][idx];
-          label.innerHTML = `
-            <input type="checkbox" class="sub-check" data-cat="${cat.key}" data-idx="${idx}" ${checked ? 'checked' : ''}>
-            <span class="box">${CHECK_SVG}</span>
-            <span class="task-label">${taskLabel}</span>
-          `;
-          ticket.appendChild(label);
+          const photoKey = 'f-' + cat.key + '-' + idx;
+          const wrapper = document.createElement('div');
+          wrapper.className = 'task-item';
+          wrapper.innerHTML = taskRowHTML('sub-check', `data-cat="${cat.key}" data-idx="${idx}"`, taskLabel, checked, photoKey);
+          ticket.appendChild(wrapper);
         });
 
         categoryTasks.appendChild(ticket);
@@ -999,10 +1060,18 @@
       document.querySelectorAll('.sub-check').forEach(input => {
         input.addEventListener('change', () => {
           subtaskState[input.dataset.cat][input.dataset.idx] = input.checked;
+          const block = document.getElementById('photoblock-' + input.dataset.photokey);
+          if(block) block.style.display = input.checked ? 'block' : 'none';
           updateProgress2();
         });
       });
     }
+
+    wireTaskPhotoInputs();
+    document.querySelectorAll('.task-photo-block').forEach(block => {
+      const key = block.id.replace('photoblock-', '');
+      renderTaskPhotoGrid(key);
+    });
 
     updateProgress2();
     document.getElementById('summaryWrap').style.display = 'none';
@@ -1115,57 +1184,44 @@
   const hintText2 = document.getElementById('hintText2');
   const summaryWrap = document.getElementById('summaryWrap');
   const receiptText = document.getElementById('receiptText');
-
-  let photos = [];
-  const MIN_PHOTOS = 3;
-  const photoInput = document.getElementById('photoInput');
-  const photoGrid = document.getElementById('photoGrid');
-  const photoCount = document.getElementById('photoCount');
   const shareWithPhotosBtn = document.getElementById('shareWithPhotosBtn');
 
-  photoInput.addEventListener('change', () => {
-    Array.from(photoInput.files).forEach(file => photos.push(file));
-    photoInput.value = '';
-    renderPhotoGrid();
-    updateShareButtonVisibility();
-  });
-
-  function renderPhotoGrid(){
-    photoGrid.innerHTML = '';
-    photos.forEach((file, idx) => {
-      const thumb = document.createElement('div');
-      thumb.className = 'photo-thumb';
-
-      const img = document.createElement('img');
-      img.src = URL.createObjectURL(file);
-      thumb.appendChild(img);
-
-      const removeBtn = document.createElement('button');
-      removeBtn.className = 'remove-photo';
-      removeBtn.textContent = '✕';
-      removeBtn.addEventListener('click', () => {
-        photos.splice(idx, 1);
-        renderPhotoGrid();
-        updateShareButtonVisibility();
+  function getMissingPhotoTasks(){
+    const missing = [];
+    if(selectedShift === 'abertura'){
+      getVisibleAberturaIndices().forEach(idx => {
+        if(aberturaState[idx]){
+          const key = 'a-' + idx;
+          if(!(taskPhotos[key] && taskPhotos[key].length >= 1)) missing.push(key);
+        }
       });
-      thumb.appendChild(removeBtn);
-
-      photoGrid.appendChild(thumb);
-    });
-    photoCount.textContent = '(' + photos.length + '/' + MIN_PHOTOS + ')';
-    photoCount.style.color = photos.length >= MIN_PHOTOS ? 'var(--sage)' : '';
+    } else {
+      CATEGORIES.forEach(cat => {
+        if(!selectedCategories.has(cat.key)) return;
+        subtaskState[cat.key].forEach((checked, idx) => {
+          if(checked){
+            const key = 'f-' + cat.key + '-' + idx;
+            if(!(taskPhotos[key] && taskPhotos[key].length >= 1)) missing.push(key);
+          }
+        });
+      });
+    }
+    return missing;
   }
 
   function updateShareButtonVisibility(){
-    const canShareFiles = !!(navigator.canShare && photos.length > 0 && navigator.canShare({ files: photos }));
+    const allPhotos = getAllTaskPhotos();
+    const canShareFiles = !!(navigator.canShare && allPhotos.length > 0 && navigator.canShare({ files: allPhotos }));
     shareWithPhotosBtn.style.display = canShareFiles ? 'block' : 'none';
   }
 
   document.getElementById('generateBtn').addEventListener('click', () => {
-    if(photos.length < MIN_PHOTOS){
+    const missing = getMissingPhotoTasks();
+    if(missing.length > 0){
       hintText2.classList.add('warn');
-      hintText2.textContent = 'Tire pelo menos ' + MIN_PHOTOS + ' fotos antes de gerar o resumo';
-      document.getElementById('photoInput').closest('.ticket').scrollIntoView({behavior:'smooth', block:'center'});
+      hintText2.textContent = 'Tire pelo menos uma foto para cada tarefa marcada como feita';
+      const firstBlock = document.getElementById('photoblock-' + missing[0]);
+      if(firstBlock) firstBlock.scrollIntoView({behavior:'smooth', block:'center'});
       return;
     }
     hintText2.classList.remove('warn');
@@ -1203,7 +1259,7 @@
       await navigator.share({
         title: 'Pie Fection',
         text: receiptText.textContent,
-        files: photos
+        files: getAllTaskPhotos()
       });
     }catch(e){
       if(e.name !== 'AbortError') console.error(e);
