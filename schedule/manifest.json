@@ -1,0 +1,24 @@
+{
+  "name": "Pie-Fection Schedule",
+  "short_name": "PF Schedule",
+  "description": "Shift Schedule Portal — Pie-Fection Pizzeria & Bistro",
+  "start_url": "/Pie-Fection/schedule/",
+  "display": "standalone",
+  "background_color": "#202124",
+  "theme_color": "#C0392B",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
