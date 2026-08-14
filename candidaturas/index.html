@@ -981,18 +981,22 @@ $('app-form').addEventListener('submit', async (e)=>{
   };
 
   try{
-    let resumeUrl = '';
+    const docRef = await db.collection(COLLECTION).add(docData);
+
     if(selectedFile){
-      const path = `resumes/${ticketNo}_${selectedFile.name}`;
-      const ref = storage.ref().child(path);
-      await ref.put(selectedFile);
-      resumeUrl = await ref.getDownloadURL();
-      docData.resumeUrl = resumeUrl;
-      docData.resumeName = selectedFile.name;
+      try{
+        const path = `resumes/${ticketNo}_${selectedFile.name}`;
+        const ref = storage.ref().child(path);
+        const resumeUrl = await Promise.race([
+          ref.put(selectedFile).then(()=>ref.getDownloadURL()),
+          new Promise((_,reject)=>setTimeout(()=>reject(new Error('upload-timeout')), 20000))
+        ]);
+        await docRef.update({resumeUrl, resumeName: selectedFile.name});
+      }catch(fileErr){
+        console.error('Resume upload failed/timed out:', fileErr);
+        /* silent fail, application already saved without resume */
+      }
     }
-
-    await db.collection(COLLECTION).add(docData);
-
     // Email notification (best-effort; don't block success on failure)
     emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
       to_email: ADMIN_EMAIL,
